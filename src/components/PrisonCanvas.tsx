@@ -20,6 +20,7 @@ export function PrisonCanvas({ engine }: PrisonCanvasProps) {
     let initialized = false;
     let destroyed = false;
     let resizeObserver: ResizeObserver | null = null;
+    let scene: PrisonScene | null = null;
 
     async function initialize() {
       try {
@@ -33,25 +34,32 @@ export function PrisonCanvas({ engine }: PrisonCanvasProps) {
         });
         initialized = true;
         if (disposed) {
+          scene?.destroy();
           app.destroy({ removeView: true }, { children: true });
           destroyed = true;
           return;
         }
 
         element.appendChild(app.canvas);
-        const scene = new PrisonScene(app);
+        scene = new PrisonScene(app);
         scene.resize();
         resizeObserver = new ResizeObserver(() => {
           app.resize();
-          scene.resize();
+          scene?.resize();
         });
         resizeObserver.observe(element);
         app.ticker.add((ticker) => {
           engine.tick(ticker.deltaMS);
-          scene.update(ticker.deltaMS, engine.getState());
+          scene?.update(ticker, engine.getState());
         });
-        scene.update(0, engine.getState());
+        scene.update(undefined, engine.getState());
       } catch (reason) {
+        if (initialized && !destroyed) {
+          resizeObserver?.disconnect();
+          scene?.destroy();
+          app.destroy({ removeView: true }, { children: true });
+          destroyed = true;
+        }
         console.error('Failed to initialize PixiJS scene:', reason);
         if (!disposed) setError(true);
       }
@@ -63,6 +71,7 @@ export function PrisonCanvas({ engine }: PrisonCanvasProps) {
       disposed = true;
       resizeObserver?.disconnect();
       if (initialized && !destroyed) {
+        scene?.destroy();
         app.destroy({ removeView: true }, { children: true });
         destroyed = true;
       }
