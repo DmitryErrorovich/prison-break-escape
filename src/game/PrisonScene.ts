@@ -1,6 +1,7 @@
-import { Container, Graphics, Text, type Application, type Ticker } from 'pixi.js';
+import { Graphics, Text, type Application, type Ticker } from 'pixi.js';
 import type { GameState, RoundPhase } from './DemoCrashEngine';
 import { createAnimatedRunner } from './RunnerAnimation';
+import { PrisonEnvironment } from './PrisonEnvironment';
 
 // Fixed logical size; scale the scene graph to fit its parent canvas.
 export const SCENE_WIDTH = 1000;
@@ -18,43 +19,12 @@ function label(text: string, size: number, color: number): Text {
   });
 }
 
-function corridorTile(): Container {
-  const tile = new Container();
-  const wall = new Graphics()
-    .rect(0, 0, SCENE_WIDTH, 345).fill(0x18283c)
-    .rect(0, 0, SCENE_WIDTH, 21).fill(0x263c54)
-    .rect(0, 308, SCENE_WIDTH, 16).fill(0x293f53)
-    .rect(0, 324, SCENE_WIDTH, 21).fill(0x0d1c30);
-  tile.addChild(wall);
-
-  for (let x = 50; x < SCENE_WIDTH; x += 238) {
-    const door = new Graphics()
-      .roundRect(x, 99, 132, 225, 6).fill(0x0c1727)
-      .roundRect(x + 9, 107, 114, 209, 4).fill(0x16283b)
-      .rect(x + 19, 114, 5, 197).fill(0x527084)
-      .rect(x + 49, 114, 5, 197).fill(0x527084)
-      .rect(x + 79, 114, 5, 197).fill(0x527084)
-      .rect(x + 108, 114, 5, 197).fill(0x527084)
-      .rect(x + 13, 154, 106, 6).fill(0x415d71)
-      .rect(x + 13, 261, 106, 6).fill(0x415d71);
-    tile.addChild(door);
-    const number = label(`CELL ${String(Math.floor(x / 238) + 1).padStart(2, '0')}`, 13, 0x819bb4);
-    number.position.set(x + 13, 73);
-    tile.addChild(number);
-  }
-
-  const lamp = new Graphics().roundRect(390, 28, 220, 12, 5).fill(0xb4e7d9);
-  const lampGlow = new Graphics().roundRect(357, 40, 286, 23, 10).fill({ color: 0x52c7b8, alpha: 0.12 });
-  tile.addChild(lampGlow, lamp);
-  return tile;
-}
-
 function clamp01(value: number): number { return Math.min(1, Math.max(0, value)); }
 function easeOutCubic(value: number): number { return 1 - (1 - clamp01(value)) ** 3; }
 
 /** Scene owns visuals only; DemoCrashEngine remains responsible for results. */
 export class PrisonScene {
-  private readonly tiles: [Container, Container];
+  private readonly environment: PrisonEnvironment;
   private readonly prisoner;
   private readonly guard;
   private readonly prisonerShadow: Graphics;
@@ -66,6 +36,7 @@ export class PrisonScene {
   private readonly dust: Dust[];
   private phase: RoundPhase = 'ready';
   private progress = 0;
+  private distance = 0;
   private animationMs = 0;
   private transitionMs = 0;
   private dustMs = 0;
@@ -81,8 +52,8 @@ export class PrisonScene {
       .rect(0, 522, SCENE_WIDTH, 38).fill(0x1a2736);
     app.stage.addChild(background);
 
-    this.tiles = [corridorTile(), corridorTile()];
-    app.stage.addChild(...this.tiles);
+    this.environment = new PrisonEnvironment();
+    app.stage.addChild(this.environment);
 
     const floor = new Graphics()
       .rect(0, 342, SCENE_WIDTH, 218).fill(0x243345)
@@ -163,7 +134,8 @@ export class PrisonScene {
     this.animationMs += dt;
 
     if (running) {
-      this.progress = (this.progress + dt * 0.34) % SCENE_WIDTH;
+      this.distance += dt * 0.34;
+      this.progress = this.distance % SCENE_WIDTH;
       this.dustMs += dt;
       while (this.dustMs >= 95) {
         this.dustMs -= 95;
@@ -176,8 +148,7 @@ export class PrisonScene {
       }
     }
 
-    this.tiles[0].x = -this.progress;
-    this.tiles[1].x = SCENE_WIDTH - this.progress;
+    this.environment.update(dt, this.distance, running);
     this.floorMarks.forEach((mark, i) => {
       mark.x = ((i * 104 - this.progress * 1.75) % (SCENE_WIDTH + 104) + SCENE_WIDTH + 104) % (SCENE_WIDTH + 104) - 60;
     });
@@ -243,6 +214,7 @@ export class PrisonScene {
     this.dustMs = 0;
     if (next === 'running') {
       this.progress = 0;
+      this.distance = 0;
       this.animationMs = 0;
       this.dust.forEach((particle) => { particle.life = 0; particle.shape.visible = false; });
       this.guard.gotoAndPlay(0);
