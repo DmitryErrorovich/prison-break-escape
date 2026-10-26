@@ -42,9 +42,30 @@ The initial scene draws its own graphics; no licensed external sprites or assets
 2. Scene graph: `Container`, `Graphics`, `Text`, stage ordering
 3. `Ticker` and frame-rate-independent movement using `deltaMS`
 4. Scaling a fixed logical scene to a responsive DOM canvas
-5. Sprite sheets, `Assets`, `AnimatedSprite`, and texture lifecycle (next PR)
-6. Replacing local round simulation with a server-authoritative WebSocket feed (future)
+5. Procedural run-cycle frames: `renderer.generateTexture`, `Rectangle`, `AnimatedSprite`, and texture lifecycle (PR #2)
+6. External sprite sheets and `Assets.load` (future)
+7. Replacing local round simulation with a server-authoritative WebSocket feed (future)
 
 ## Important limitations
 
 This is **not** a production wagering system. Random outcomes use `Math.random`, are generated and processed in the browser, and are **not cryptographically secure, provably fair, regulated, or trustworthy for real stakes**. If this evolves into a real-money product, outcome generation, payouts, synchronization, security, compliance, and independent testing must be redesigned and handled server-side.
+
+
+## Animation milestone (PR #2)
+
+The game's original simple `Graphics`-drawn characters are still the source art.
+`src/game/RunnerAnimation.ts` builds **eight running poses** for each character,
+uses `renderer.generateTexture()` once for each pose, then animates the textures
+with `AnimatedSprite` on the existing application `Ticker`.
+
+`src/game/PrisonScene.ts` controls scene transitions, scrolling, alarm lights,
+pooled dust particles and win/loss poses. None of these visuals determine a crash.
+The scene explicitly frees its generated textures when React unmounts the canvas.
+
+Read [`docs/pixi-animations.md`](docs/pixi-animations.md) for a guided walkthrough.
+
+Run the demo engine regression tests with Node.js 22.16+ (experimental type transformation):
+
+```bash
+npm test
+```
