@@ -144,9 +144,14 @@ export class PrisonScene {
 
   resize(): void {
     const { width, height } = this.app.screen;
-    const scale = Math.min(width / SCENE_WIDTH, height / SCENE_HEIGHT);
+    // Portrait: crop our wide corridor like a camera rather than letterboxing.
+    // Center between the guard (x=240) and prisoner (x=574).
+    const portrait = width / Math.max(1,height) < 1.3;
+    const scale = portrait
+      ? Math.max(width / SCENE_WIDTH, height / SCENE_HEIGHT)
+      : Math.min(width / SCENE_WIDTH, height / SCENE_HEIGHT);
     this.app.stage.scale.set(scale);
-    this.baseX = (width - SCENE_WIDTH * scale) / 2;
+    this.baseX = portrait ? width / 2 - 407 * scale : (width - SCENE_WIDTH * scale) / 2;
     this.baseY = (height - SCENE_HEIGHT * scale) / 2;
     this.app.stage.position.set(this.baseX, this.baseY);
   }

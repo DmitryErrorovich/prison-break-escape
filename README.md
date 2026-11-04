@@ -69,3 +69,10 @@ Run the demo engine regression tests with Node.js 22.16+ (experimental type tran
 ```bash
 npm test
 ```
+## Mobile creative capture mode
+
+The `feat/mobile-capture-demo` branch includes a mobile-first, portrait
+simulated gameplay interface, fiat-style currency labels (EUR/USD/RON) for
+**virtual demo balances only**, and four scripted recording scenarios with
+hands-free autoplay. There is no real-money functionality or payment flow.
+See [Mobile recording instructions](docs/mobile-capture.md).
