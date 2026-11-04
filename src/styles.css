@@ -85,3 +85,80 @@ h1 { margin: 4px 0 0; font: 900 clamp(38px, 4.1vw, 56px)/.96 'Barlow Condensed',
 @media(max-width: 1060px) { .workspace { grid-template-columns: 1fr; padding-top: 25px; } .controls { margin-top: 0; } .wager-grid { grid-template-columns: repeat(4,1fr); } .scene-hud { top: 12%; } }
 @media(max-width: 620px) { .topbar { height: 72px; } .brand-type strong { font-size: 21px; } .brand-mark { width: 40px; height: 40px; } .live-indicator { font-size: 9px; } .version-label { display: none; } .scene-heading { align-items: center; } h1 { font-size: 39px; } .scene-footer { gap: 11px; font-size: 9px; } .scene-hud { top: 9%; } .multiplier { font-size: clamp(45px, 10vw, 65px); } .hud-kicker { font-size: 8px; } .status-line { font-size: 8px; letter-spacing: .6px; } .site-footer { flex-direction: column; gap: 7px; } }
 @media(prefers-reduced-motion: reduce) { .action-button { transition: none; } }
+
+/* Mobile-first creative capture shell — preserve Pixi game visuals. */
+html{background:#080e16}
+body{min-width:320px}
+.app-shell{display:block;min-height:100dvh;padding:22px 12px 40px;background:radial-gradient(ellipse at 50% 5%,#24394b 0%,#090e17 64%)}
+.product-frame{max-width:480px;min-height:760px;margin:auto;background:#0e1824;border:1px solid #263b47;border-radius:24px;overflow:hidden;box-shadow:0 26px 88px #0009}
+.topbar{height:76px;min-height:76px;padding:15px 17px;background:#121f2e;gap:8px}
+.brand{gap:10px;min-width:0}.brand-mark{width:39px;height:43px;flex:none;border-radius:10px;background:linear-gradient(140deg,#ffc978,#e88749);box-shadow:0 5px 20px #f7ab5540}
+.brand-mark span{font-size:21px}.brand-mark small{font-size:9px}
+.brand-type{gap:4px;min-width:0}.brand-type strong{font-size:22px;white-space:nowrap;line-height:.94}.brand-type>span{font-size:8px;letter-spacing:1.7px;white-space:nowrap}
+.wallet{text-align:right;display:flex;flex-direction:column;gap:3px;flex:none}
+.wallet span{font-size:8px;letter-spacing:1.2px;color:#87adbb;font-weight:800}
+.wallet strong{font:900 24px/.96 'Barlow Condensed',sans-serif;color:#9cf4cd;white-space:nowrap}
+.workspace{max-width:none;margin:0;padding:0 14px 14px;display:block}
+.session-strip{padding:12px 2px 10px;display:flex;justify-content:space-between;align-items:center;gap:7px;font-size:9px;letter-spacing:.8px;font-weight:800;color:#819bab}
+.session-live{color:#8cf0c3;white-space:nowrap}.session-live i{display:inline-block;width:6px;height:6px;background:#56deac;border-radius:50%;box-shadow:0 0 11px #56deac;margin-right:4px}
+.scene-heading{align-items:end;gap:12px;margin:0;padding:6px 2px 10px}.eyebrow,.section-label{font-size:10px;letter-spacing:1.3px;color:#98aebe}
+h1{font-size:35px;line-height:.98;margin:3px 0 0}
+.phase-pill{border-radius:99px;white-space:nowrap;padding:7px 10px;border:1px solid #625039;background:#32291f;font-size:9px;letter-spacing:.5px;color:#edbd7f}
+.phase-pill.running,.phase-pill.cashed-out{border-color:#347e64;background:#173a32;color:#83eac0}
+.phase-pill.crashed{border-color:#7b4256;background:#432632;color:#ff9faf}
+.game-window{width:100%;height:clamp(315px,43dvh,420px);aspect-ratio:auto;overflow:hidden;border:1px solid #3a5868;border-radius:17px;box-shadow:0 15px 42px #0009,inset 0 0 22px #071320}
+.game-window:after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,#06142088 0%,transparent 32%,transparent 67%,#061420dd 100%);box-shadow:inset 0 0 33px #0005}
+.scene-topline,.scene-bottomline{position:absolute;left:15px;right:15px;z-index:2;display:flex;align-items:center;justify-content:space-between;font-weight:800;font-size:9px;letter-spacing:1.2px;color:#b2c5cd;text-shadow:0 2px 10px #000}
+.scene-topline{top:15px}.scene-topline span:last-child{color:#ff9298}.scene-bottomline{bottom:14px;font-size:8px;color:#7d9aa9}
+.scene-hud{top:17%;width:min(94%,315px);padding:16px 8px 17px;z-index:2;border-radius:16px;background:linear-gradient(180deg,#071625d8,#081624a5 64%,transparent);pointer-events:none}
+.hud-kicker{font-size:10px;letter-spacing:2.1px;color:#bed7df}
+.multiplier{font-size:clamp(65px,18vw,96px);line-height:1;color:#8bf8c4;filter:drop-shadow(0 0 17px #21bf814e)}
+.multiplier.lost{color:#ff849a;filter:drop-shadow(0 0 17px #ff52615c)}
+.status-line{font-size:10px;letter-spacing:1.1px}.status-line.crashed{color:#ffa6af}
+.result-banner{position:absolute;z-index:3;bottom:62px;left:50%;transform:translateX(-50%);padding:10px 18px;border-radius:8px;white-space:nowrap;font:900 23px/1 'Barlow Condensed',sans-serif;letter-spacing:.8px;box-shadow:0 12px 20px #0005}
+.result-banner.cashed-out{background:#9ef4bc;color:#12362d}.result-banner.crashed{background:#ef647c;color:#330e1a}
+.history-panel{min-height:0;margin:0;display:flex;align-items:center;gap:10px;padding:14px 2px 15px;border:0;border-bottom:1px solid #293b48;background:none}
+.history-panel .section-label{white-space:nowrap;font-size:9px}.history-list{display:flex;min-width:0;flex-wrap:nowrap;gap:6px;overflow:hidden;align-items:center;margin:0}
+.history-chip{font-size:14px;padding:5px 8px;min-width:45px;border-radius:6px;flex:none}
+.empty-history{font-size:11px;white-space:nowrap;color:#7b98a7}
+.controls{margin:0;padding:15px 0 0;width:100%;border:0;border-radius:0;background:none;box-shadow:none}
+.control-top{margin:0 0 10px;gap:8px}.top-code{font:800 10px 'DM Sans',sans-serif;color:#b9a987;letter-spacing:.6px}
+.bet-header{margin:0 0 8px}.bet-header label{font-size:10px;letter-spacing:1.2px}.bet-header span{font-size:9px}
+.wager-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.wager-button{border:1px solid #355064;border-radius:10px;min-height:47px;background:#162738;font-size:23px}
+.wager-button small{display:inline;margin-left:3px;font-size:9px}.wager-button.selected{background:#3f3324;border-color:#efb46b;color:#ffcd88;box-shadow:inset 0 0 18px #f1aa4433}
+.payout-card{margin:13px 0 12px;padding:13px 15px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#111f2b;border:1px solid #293f4f;border-radius:11px}
+.payout-card>div:first-child{display:flex;flex-direction:column;gap:3px}
+.small-caption{font-size:9px;letter-spacing:1.1px}.payout-value{font:900 30px/1.05 'Barlow Condensed',sans-serif;color:#f3f7ed}
+.payout-multiplier{font:900 24px 'Barlow Condensed',sans-serif;color:#8fe3bc}
+.action-button{min-height:65px;padding:0 20px;border:0;border-radius:12px;font-size:30px;box-shadow:0 8px 30px #0005;touch-action:manipulation}
+.action-button.start{background:linear-gradient(140deg,#ffd184,#f7a44f)}
+.action-button.cashout{background:linear-gradient(140deg,#aafac5,#53d9aa)}
+.action-symbol{font:500 32px 'DM Sans',sans-serif}
+.helper-line{text-align:center;font-size:10px;line-height:1.4;padding:9px 5px 12px;color:#8ca7b7}
+.capture-panel{border:1px solid #334a58;border-radius:11px;background:#121f2b;margin-bottom:10px;overflow:hidden}
+.capture-panel summary{cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px;font-size:10px;font-weight:800;letter-spacing:.6px;list-style:none}
+.capture-panel summary::-webkit-details-marker{display:none}
+.capture-panel summary:after{content:'⌄';font-size:17px;color:#e4b478}.capture-panel[open] summary:after{content:'⌃'}
+.capture-summary-note{font-size:9px;color:#87adbb;margin-left:auto}
+.capture-body{border-top:1px solid #293e4f;padding:12px 13px 15px}
+.capture-description{font-size:11px;line-height:1.5;color:#98adbd;margin:0 0 13px}
+.settings-row{display:flex;align-items:center;justify-content:space-between;margin:10px 0;gap:10px}
+.settings-row label{font-size:10px;font-weight:800;letter-spacing:.5px;color:#a8bfcd}
+.settings-row select{border:1px solid #38566a;border-radius:7px;background:#192b3a;color:#e9f4ee;padding:8px;font-size:12px;max-width:55%;min-width:130px}
+.auto-row{border-top:1px solid #304250;margin-top:13px;padding-top:13px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.auto-row span{display:flex;flex-direction:column;gap:5px}.auto-row strong{font-size:11px;letter-spacing:.4px}.auto-row small{color:#96b1c0;font-size:10px;line-height:1.4}
+.auto-row input{height:23px;width:23px;accent-color:#69e6af;flex:none}
+.reset-button{width:100%;background:#22384a;border:1px solid #3e6070;border-radius:8px;padding:10px;margin-top:12px;color:#e1f0ef;font-size:10px;letter-spacing:1px;font-weight:800}
+.site-footer{max-width:none;padding:5px 5px 15px;display:block;font-size:9px;letter-spacing:.7px;color:#718c9b;text-align:center;line-height:1.5}
+button:focus-visible,select:focus-visible,summary:focus-visible,input:focus-visible{outline:2px solid #8cf2c4;outline-offset:3px}
+@media(max-width:540px){
+.app-shell{padding:0}.product-frame{border:0;border-radius:0;min-height:100dvh;max-width:none;box-shadow:none}
+.workspace{padding-left:12px;padding-right:12px}.topbar{height:68px;min-height:68px;padding:12px 14px}
+.game-window{height:clamp(285px,41dvh,385px)}.brand-type strong{font-size:21px}
+}
+@media(max-width:370px){
+.brand-type>span{font-size:7px}.wallet strong{font-size:21px}.brand-type strong{font-size:19px}
+.session-strip{font-size:8px}.game-window{height:clamp(260px,39dvh,342px)}.wager-grid{gap:5px}
+.wager-button{font-size:21px}.scene-hud{top:13%}
+}

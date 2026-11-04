@@ -1,130 +1,105 @@
 import { useEffect, useState } from 'react';
 import { PrisonCanvas } from './components/PrisonCanvas';
 import { DemoCrashEngine, type GameState } from './game/DemoCrashEngine';
+import { DEMO_CURRENCIES, DEMO_SCENARIOS, formatDemoAmount, type DemoCurrency, type DemoScenario } from './game/CaptureScenarios';
 
 const engine = new DemoCrashEngine();
-const wagers = [10, 25, 50, 100] as const;
+engine.setScenario('quick');
+const wagers = [10,25,50,100] as const;
+const multiplier = (value:number) => value.toFixed(2)+'×';
+const status = (state:GameState) => ({
+ ready:'YOUR ESCAPE STARTS HERE',running:'RUN! THE GUARDS ARE COMING',
+ 'cashed-out':'SUCCESSFUL ESCAPE',crashed:'YOU GOT CAUGHT'
+})[state.phase];
 
-function amount(value: number): string {
-  return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
+export default function App(){
+ const [game,setGame]=useState<GameState>(engine.getState());
+ const [currency,setCurrency]=useState<DemoCurrency>('EUR');
+ useEffect(()=>engine.subscribe(setGame),[]);
+ const running=game.phase==='running';
+ const afford=game.balance>=game.wager;
+ const payout=running?game.wager*game.multiplier:(game.payout??game.wager);
+ const scenario=DEMO_SCENARIOS[game.activeScenario];
 
-function multiplier(value: number): string {
-  return `${value.toFixed(2)}×`;
-}
-
-function gameMessage(state: GameState): string {
-  switch (state.phase) {
-    case 'ready': return 'THE GATES ARE WAITING';
-    case 'running': return 'THE CHASE IS ON';
-    case 'cashed-out': return `ESCAPED WITH ${amount(state.payout ?? 0)} CREDITS`;
-    case 'crashed': return `CAUGHT AT ${multiplier(state.revealedCrash ?? 1)}`;
-  }
-}
-
-export default function App() {
-  const [game, setGame] = useState<GameState>(engine.getState());
-  useEffect(() => engine.subscribe(setGame), []);
-
-  const playing = game.phase === 'running';
-  const canAfford = game.balance >= game.wager;
-  const potentialPayout = game.wager * game.multiplier;
-
-  return (
-    <div className="app-shell">
-      <header className="topbar">
-        <div className="brand">
-          <div className="brand-mark"><span>PB</span><small>07</small></div>
-          <div className="brand-type"><strong>PRISON BREAK</strong><span>ESCAPE PROTOCOL</span></div>
-        </div>
-        <div className="topbar-right">
-          <span className="live-indicator"><i /> LOCAL SIMULATION</span>
-          <span className="version-label">ALPHA / 0.1</span>
-        </div>
-      </header>
-
-      <main className="workspace">
-        <section className="game-section" aria-label="Game scene and status">
-          <div className="scene-heading">
-            <div><div className="eyebrow">PRISON SECTOR / 07</div><h1>THE ESCAPE</h1></div>
-            <span className={`phase-pill ${playing ? 'active' : ''}`}>{playing ? '● RUNNING' : '● STANDBY'}</span>
-          </div>
-          <div className="game-window">
-            <PrisonCanvas engine={engine} />
-            <div className="scene-hud" aria-live="off">
-              <div className="hud-kicker">CURRENT MULTIPLIER</div>
-              <div className={`multiplier ${game.phase === 'crashed' ? 'lost' : ''}`}>{multiplier(game.multiplier)}</div>
-              <div className={`status-line ${game.phase}`}>{gameMessage(game)}</div>
-            </div>
-            <div className="scene-edge scene-edge-top" aria-hidden="true" />
-            <div className="scene-edge scene-edge-bottom" aria-hidden="true" />
-          </div>
-          <div className="scene-footer">
-            <span><span className="legend-dot teal" /> ENGINE: PIXIJS 8</span>
-            <span>ROUND: #{String(game.round).padStart(4, '0')}</span>
-            <span><span className="legend-dot orange" /> VIRTUAL CREDITS ONLY</span>
-          </div>
-          <div className="history-panel">
-            <div className="section-label">RECENT CAPTURES</div>
-            <div className="history-list" aria-label="Previous crash multipliers">
-              {game.history.length === 0 ? (
-                <span className="empty-history">Complete your first round to see results.</span>
-              ) : game.history.map((crash, index) => (
-                <span className={`history-chip ${crash >= 2 ? 'high' : 'low'}`} key={`${game.round}-${index}`}>{multiplier(crash)}</span>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <aside className="controls" aria-label="Demo game controls">
-          <div className="control-top"><span className="section-label">CONTROL STATION</span><span className="top-code">// 001</span></div>
-          <div className="balance-card">
-            <div className="small-caption">YOUR BALANCE</div>
-            <div className="balance-value">{amount(game.balance)} <span>CR</span></div>
-            <div className="balance-subtitle">DEMO CREDITS · NO CASH VALUE</div>
-          </div>
-          <div className="bet-header"><label htmlFor="wager-25">ENTRY STAKE</label><span>SELECT AMOUNT</span></div>
-          <div className="wager-grid" role="group" aria-label="Choose entry stake">
-            {wagers.map((wager) => (
-              <button
-                type="button"
-                id={`wager-${wager}`}
-                key={wager}
-                disabled={playing}
-                className={`wager-button ${game.wager === wager ? 'selected' : ''}`}
-                onClick={() => engine.setWager(wager)}
-                aria-pressed={game.wager === wager}
-              >
-                {wager} <small>CR</small>
-              </button>
-            ))}
-          </div>
-          <div className="payout-card">
-            <div className="small-caption">{playing ? 'AVAILABLE TO CASH OUT' : 'POTENTIAL PAYOUT'}</div>
-            <div className="payout-value">{amount(playing ? potentialPayout : game.wager)} <span>CR</span></div>
-          </div>
-          {playing ? (
-            <button className="action-button cashout" onClick={() => engine.cashOut()}>
-              CASH OUT <span>↗</span>
-            </button>
-          ) : (
-            <button className="action-button start" disabled={!canAfford} onClick={() => engine.startRound()}>
-              START ESCAPE <span>→</span>
-            </button>
-          )}
-          {!canAfford && !playing && (
-            <button className="reset-button" onClick={() => engine.resetDemoCredits()}>REFILL DEMO CREDITS</button>
-          )}
-          <p className="control-helper">
-            {playing ? 'Cash out before the guards catch you.' :
-              game.phase === 'cashed-out' ? 'You made it out. Start another round.' :
-              game.phase === 'crashed' ? 'The guards got you. Try another run.' :
-              'Start a round. The multiplier rises until you cash out or get caught.'}
-          </p>
-          <div className="control-notice"><span>ⓘ</span><p>This is a learning prototype. Outcomes are simulated locally and are not suitable for real-money betting.</p></div>
-        </aside>
-      </main>
-      <footer className="site-footer"><span>© PRISON BREAK: ESCAPE</span><span>BUILT WITH REACT + TYPESCRIPT + PIXIJS</span></footer>
+ return <div className="app-shell"><div className="product-frame">
+   <header className="topbar">
+    <div className="brand">
+     <div className="brand-mark" aria-hidden="true"><span>PB</span><small>07</small></div>
+     <div className="brand-type"><strong>PRISON BREAK</strong><span>ESCAPE THE LIMITS</span></div>
     </div>
-  );
+    <div className="wallet" aria-label="Simulated balance"><span>DEMO BALANCE</span><strong>{formatDemoAmount(game.balance,currency)}</strong></div>
+   </header>
+   <main className="workspace">
+    <div className="session-strip"><span className="session-live"><i/> CREATIVE DEMO</span><span>NO REAL MONEY OR PRIZES</span></div>
+    <section className="game-section" aria-label="Prison escape demo game">
+     <div className="scene-heading">
+      <div><div className="eyebrow">ROUND #{String(game.round).padStart(4,'0')}</div><h1>THE ESCAPE</h1></div>
+      <span className={'phase-pill '+game.phase}>{running?'● RUNNING':game.phase==='crashed'?'● CAUGHT':game.phase==='cashed-out'?'● ESCAPED':'● READY'}</span>
+     </div>
+     <div className="game-window">
+      <PrisonCanvas engine={engine}/>
+      <div className="scene-topline"><span>BLOCK 07</span><span>CCTV ACTIVE ●</span></div>
+      <div className="scene-hud" aria-live="off">
+       <div className="hud-kicker">ESCAPE MULTIPLIER</div>
+       <div className={'multiplier '+(game.phase==='crashed'?'lost':'')}>{multiplier(game.multiplier)}</div>
+       <div className={'status-line '+game.phase}>{status(game)}</div>
+      </div>
+      {(game.phase==='cashed-out'||game.phase==='crashed')&&<div className={'result-banner '+game.phase}>
+       {game.phase==='cashed-out'?'DEMO WIN  '+formatDemoAmount(game.payout??0,currency):'CRASH AT '+multiplier(game.revealedCrash??1)}
+      </div>}
+      <div className="scene-bottomline"><span>BUILT WITH PIXIJS</span><span>SIMULATED GAMEPLAY</span></div>
+     </div>
+     <div className="history-panel"><div className="section-label">LAST CRASHES</div>
+      <div className="history-list" aria-label="Simulated crash history">
+       {game.history.length===0?<span className="empty-history">The chase starts here</span>:
+        game.history.slice(0,7).map((point,i)=><span key={game.round+'-'+i} className={'history-chip '+(point>=2?'high':'low')}>{multiplier(point)}</span>)}
+      </div>
+     </div>
+    </section>
+    <section className="controls" aria-label="Demo betting controls">
+     <div className="control-top"><span className="section-label">PLACE A DEMO BET</span><span className="top-code">AUTO / {game.autoPlay?'ON':'OFF'}</span></div>
+     <div className="bet-header"><label htmlFor="wager-25">AMOUNT</label><span>{currency} · VIRTUAL</span></div>
+     <div className="wager-grid" role="group" aria-label="Choose virtual stake">
+      {wagers.map(wager=><button type="button" key={wager} id={'wager-'+wager}
+       disabled={running||game.autoPlay} aria-pressed={game.wager===wager}
+       onClick={()=>engine.setWager(wager)} className={'wager-button '+(game.wager===wager?'selected':'')}>
+       {wager}<small>{currency}</small>
+      </button>)}
+     </div>
+     <div className="payout-card"><div><span className="small-caption">{running?'CASH OUT VALUE':game.phase==='cashed-out'?'LAST DEMO WIN':'DEMO PAYOUT'}</span>
+      <strong className="payout-value">{formatDemoAmount(payout,currency)}</strong></div>
+      <span className="payout-multiplier">{multiplier(game.multiplier)}</span>
+     </div>
+     {running?<button type="button" className="action-button cashout" onClick={()=>engine.cashOut()}>
+      <span>CASH OUT</span><span className="action-symbol">↗</span></button>:
+      <button type="button" className="action-button start" disabled={!afford||game.autoPlay} onClick={()=>engine.startRound()}>
+       <span>{game.autoPlay?'AUTO DEMO ACTIVE':'START ESCAPE'}</span><span className="action-symbol">→</span>
+      </button>}
+     <div className="helper-line">{game.autoPlay?'The demo sequence loops until stopped.':!afford?'Refill your virtual balance below.':'Cash out before the guards catch you.'}</div>
+    </section>
+    <details className="capture-panel">
+     <summary><span>🎬 RECORDING SETTINGS</span><span className="capture-summary-note">{game.autoPlay?'AUTO ON':scenario.label}</span></summary>
+     <div className="capture-body">
+      <p className="capture-description">Prepare your screen recording: scripted outcomes, virtual balances, no real stakes.</p>
+      <div className="settings-row"><label htmlFor="currency">DISPLAY CURRENCY</label>
+       <select id="currency" value={currency} onChange={event=>setCurrency(event.target.value as DemoCurrency)}>
+        {(Object.keys(DEMO_CURRENCIES) as DemoCurrency[]).map(code=><option value={code} key={code}>{code}</option>)}
+       </select>
+      </div>
+      <div className="settings-row"><label htmlFor="scenario">MANUAL SCENARIO</label>
+       <select id="scenario" value={game.scenario} disabled={running||game.autoPlay}
+        onChange={event=>engine.setScenario(event.target.value as DemoScenario)}>
+        {(Object.keys(DEMO_SCENARIOS) as DemoScenario[]).map(key=><option value={key} key={key}>{DEMO_SCENARIOS[key].label}</option>)}
+       </select>
+      </div>
+      <label className="auto-row" htmlFor="autoplay"><span><strong>AUTO RECORD SEQUENCE</strong>
+       <small>Quick → Close call → Crash → Big escape</small></span>
+       <input id="autoplay" type="checkbox" checked={game.autoPlay} onChange={event=>engine.setAutoPlay(event.target.checked)}/>
+      </label>
+      <button className="reset-button" type="button" disabled={running} onClick={()=>engine.resetDemoCredits()}>REFILL DEMO BALANCE</button>
+     </div>
+    </details>
+    <footer className="site-footer">SIMULATED GAMEPLAY · NO REAL DEPOSITS, WITHDRAWALS OR WINNINGS</footer>
+   </main>
+ </div></div>;
 }
