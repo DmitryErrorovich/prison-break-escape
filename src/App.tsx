@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { PrisonCanvas } from './components/PrisonCanvas';
+import { GameAudio } from './game/GameAudio';
 import { DemoCrashEngine, type GameState } from './game/DemoCrashEngine';
 import { DEMO_CURRENCIES, DEMO_SCENARIOS, formatDemoAmount, type DemoCurrency, type DemoScenario } from './game/CaptureScenarios';
 
@@ -15,7 +16,17 @@ const status = (state:GameState) => ({
 export default function App(){
  const [game,setGame]=useState<GameState>(engine.getState());
  const [currency,setCurrency]=useState<DemoCurrency>('EUR');
- useEffect(()=>engine.subscribe(setGame),[]);
+ const [soundOn,setSoundOn]=useState(false);
+ const [audioError,setAudioError]=useState(false);
+ const audio=useMemo(()=>new GameAudio(),[]);
+ useEffect(()=>{
+   const unsubscribe=engine.subscribe(state=>{setGame(state);audio.sync(state);});
+   return ()=>{unsubscribe();audio.dispose();};
+ },[audio]);
+ const toggleSound=()=>{
+   if(soundOn){audio.disable();setSoundOn(false);return;}
+   void audio.enable().then(enabled=>{setSoundOn(enabled);setAudioError(!enabled);});
+ };
  const running=game.phase==='running';
  const afford=game.balance>=game.wager;
  const payout=running?game.wager*game.multiplier:(game.payout??game.wager);
@@ -30,7 +41,12 @@ export default function App(){
     <div className="wallet" aria-label="Simulated balance"><span>DEMO BALANCE</span><strong>{formatDemoAmount(game.balance,currency)}</strong></div>
    </header>
    <main className="workspace">
-    <div className="session-strip"><span className="session-live"><i/> CREATIVE DEMO</span><span>NO REAL MONEY OR PRIZES</span></div>
+    <div className="session-strip"><span className="session-live"><i/> CREATIVE DEMO</span>
+     <button type="button" className={'sound-toggle '+(soundOn?'enabled':'')}
+      aria-pressed={soundOn} onClick={toggleSound}
+      title={audioError?'Web Audio could not be started in this browser':'Tap once to enable sound on mobile'}>
+      {soundOn?'🔊 SOUND ON':'🔇 SOUND OFF'}</button>
+     <span>NO REAL MONEY OR PRIZES</span></div>
     <section className="game-section" aria-label="Prison escape demo game">
      <div className="scene-heading">
       <div><div className="eyebrow">ROUND #{String(game.round).padStart(4,'0')}</div><h1>THE ESCAPE</h1></div>
